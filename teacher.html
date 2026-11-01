@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat & Temperature Unscramble: Teacher Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff7ec; --panel:#ffffff; --ink:#3b332c; --muted:#75685d; --line:#efdcc5;
+  --hot:#e4572e; --warm:#f3a712; --cold:#3a86ff; --ice:#e3f0ff; --good:#2a9d5c; --goodbg:#e6f6ec;
+  --tile:#fff1d2; --tile-edge:#e3a93c; --placed:#ffe0cf; --placed-edge:#e4572e;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg) radial-gradient(circle at 10% 0%,#ffe9cf 0,transparent 40%);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:17px;line-height:1.45;min-height:100vh}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{font-family:Fredoka,Nunito,sans-serif;margin:0;line-height:1.15}
+
+/* header */
+.top{position:sticky;top:0;z-index:5;background:rgba(255,247,236,.94);backdrop-filter:blur(6px);border-bottom:2px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{background:none;border:0;padding:0;font-family:Fredoka,sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px}
+.brand small{display:block;font-size:12px;font-weight:600;color:var(--muted);font-family:Nunito,sans-serif;text-align:left}
+.badge-teacher{background:var(--cold);color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;font-family:Nunito;font-weight:800;letter-spacing:.04em}
+#dots{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;transition:transform .15s}
+.dot:hover{transform:translateY(-2px)}
+.dot.half{background:linear-gradient(0deg,#ffd7a8 50%,#fff 50%);border-color:var(--warm)}
+.dot.done{background:var(--hot);border-color:var(--hot);color:#fff}
+.dot.skip{border-style:dashed;border-color:var(--cold);color:var(--cold)}
+.dot.cur{outline:3px solid var(--ink);outline-offset:2px}
+.hbar{display:none;width:100%;height:12px;background:#fff;border:2px solid var(--line);border-radius:99px;overflow:hidden}
+.hbar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--warm),var(--hot));transition:width 1s ease}
+
+/* layout */
+.wrap{max-width:1060px;margin:0 auto;padding:22px 16px 60px;display:flex;gap:22px;align-items:flex-start}
+main{flex:1;min-width:0}
+.side{position:sticky;top:90px;width:72px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+.thermo{position:relative;width:34px;height:330px}
+.tube{position:absolute;left:8px;top:0;width:18px;height:300px;background:#fff;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
+.mercury{position:absolute;bottom:0;left:0;right:0;height:6%;background:linear-gradient(0deg,var(--hot),var(--warm));transition:height 1.2s cubic-bezier(.3,1.4,.5,1)}
+.bulb{position:absolute;left:0;bottom:0;width:34px;height:34px;border-radius:50%;background:var(--hot);border:3px solid var(--ink)}
+.ticks{position:absolute;left:30px;top:6px;height:288px;display:flex;flex-direction:column;justify-content:space-between}
+.ticks i{display:block;width:8px;height:2px;background:var(--ink)}
+.side .lbl{font-family:Fredoka;font-weight:700;font-size:18px}
+.side .sub{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+
+.card{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 6px 0 #f0dfc9}
+.eyebrow{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--hot)}
+.term-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.term-head h2{font-size:clamp(28px,4.4vw,40px)}
+.pill{font-size:13px;font-weight:800;padding:4px 10px;border-radius:99px;background:#f6ece0;color:var(--muted)}
+.pill.done{background:var(--goodbg);color:var(--good)}
+.step{margin-top:22px}
+.step h3{font-size:19px;margin-bottom:10px}
+.step h3 .n{background:var(--ink);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;margin-right:8px;vertical-align:2px}
+
+/* tiles */
+.answer{min-height:78px;border:3px dashed #e6cfb3;border-radius:16px;padding:16px 16px 12px 12px;display:flex;flex-wrap:wrap;gap:14px 14px;align-content:flex-start;background:#fffcf7;transition:background .3s,border-color .3s}
+.answer .ph{color:#b3a493;font-weight:700;align-self:center}
+.answer.solved{background:var(--goodbg);border-style:solid;border-color:var(--good)}
+.pool{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;min-height:50px}
+.tile{font-family:Fredoka,sans-serif;font-weight:600;font-size:19px;padding:8px 14px;border-radius:12px;border:2px solid var(--tile-edge);border-bottom-width:5px;background:var(--tile);transition:transform .12s;touch-action:manipulation;user-select:none}
+.tile:hover{transform:translateY(-2px)}
+.tile:active{transform:translateY(2px);border-bottom-width:3px}
+.answer .tile,.pool .tile{touch-action:none;cursor:grab}
+.tile.slot{opacity:.45;outline:2px dashed var(--c,#999);outline-offset:2px}
+.tile{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.tile .pos{font-family:Nunito,sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--c);padding:1px 7px;border-radius:99px;margin-top:3px;line-height:1.35}
+.tile.tagged{box-shadow:inset 0 5px 0 var(--c)}
+.tile.tagged{background:color-mix(in srgb,var(--c) 22%,#fff);border-color:var(--c);color:color-mix(in srgb,var(--c) 75%,#000)}
+.btn.hint{background:#fff6d6;border-color:#c99a06;color:#7a5c00}
+.btn.hint:disabled{opacity:.5;cursor:not-allowed;transform:none;border-bottom-width:5px}
+.colorkey{margin-top:14px;background:#fffcf7;border:2px solid var(--line);border-radius:16px;padding:10px 12px}
+.ck-title{font-family:Fredoka,sans-serif;font-weight:700;font-size:15px;margin-bottom:8px}
+.ck-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:6px}
+.ck{display:flex;flex-direction:column;padding:5px 9px;border-radius:10px;background:color-mix(in srgb,var(--c) 22%,#fff);border:2px solid var(--c);border-bottom-width:4px;line-height:1.2}
+.ck b{color:color-mix(in srgb,var(--c) 75%,#000);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.ck small{font-size:12px;font-weight:700;color:#4a4038}
+.ck em{font-style:normal;font-size:12px;font-weight:800;color:color-mix(in srgb,var(--c) 75%,#000);margin-top:3px;padding-top:3px;border-top:1px dashed color-mix(in srgb,var(--c) 50%,#fff)}
+@media (max-width:760px){.ck-items{grid-template-columns:repeat(2,1fr)}}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.legend:empty{display:none}
+.legend span{font-size:13px;font-weight:700;padding:4px 10px;border-radius:10px;background:color-mix(in srgb,var(--c) 12%,#fff);border:2px solid var(--c);color:#3b332c}
+.legend b{color:var(--c);text-transform:uppercase;font-size:12px;letter-spacing:.04em}
+.answer .tile.ok::after,.answer .tile.no::after{position:absolute;top:-14px;right:-13px;width:23px;height:23px;border-radius:50%;display:grid;place-items:center;font-family:Nunito,Arial,sans-serif;font-size:15px;z-index:2;font-weight:900;line-height:1;color:#fff;background:#3b332c;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);animation:pop .25s ease-out}
+.answer .tile.ok::after{content:"✓";background:#fff;color:#3b332c;border-color:#3b332c}
+.answer .tile.no::after{content:"✗";background:#3b332c;color:#fff;border-color:#fff}
+.answer .tile.no{animation:wiggle .5s ease-in-out}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.answer .tile.dragging{opacity:.3}
+.tile.ghost{position:fixed;z-index:60;pointer-events:none;margin:0;transform:rotate(-3deg) scale(1.08);box-shadow:0 8px 18px rgba(0,0,0,.18);cursor:grabbing}
+body.dragging-now{user-select:none;cursor:grabbing}
+.answer.solved .tile{background:#fff;border-color:var(--good);cursor:default;transform:none}
+.pop{animation:pop .22s ease-out}
+@keyframes pop{from{transform:scale(.6);opacity:.3}to{transform:scale(1);opacity:1}}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.btn{border:2px solid var(--ink);background:#fff;border-radius:14px;padding:9px 18px;font-weight:800;border-bottom-width:5px;transition:transform .1s}
+.btn:active{transform:translateY(2px);border-bottom-width:3px}
+.btn.primary{background:var(--hot);color:#fff;border-color:#b23a18}
+.btn.cool{background:var(--ice);border-color:var(--cold);color:#1d4fa8}
+.btn.quiet{border-color:var(--line);color:var(--muted)}
+.btn.teach{background:#eef4ff;border-color:var(--cold);color:#1d4fa8}
+.spacer{flex:1}
+.msg{margin-top:12px;font-weight:700;min-height:1.4em;border-radius:12px}
+.msg:not(:empty){padding:10px 14px}
+.msg.bad{background:var(--ice);color:#1d4fa8}
+.msg.good{background:var(--goodbg);color:var(--good)}
+.msg.info{background:#fff3dd;color:#8a5a00}
+
+/* pictures */
+.locked{border:3px dashed #e6cfb3;border-radius:16px;padding:22px;text-align:center;color:#a39280;font-weight:700;background:#fffcf7}
+.pics{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.pic{position:relative;background:#fffdf8;border:3px solid var(--line);border-radius:18px;padding:10px;text-align:left;transition:transform .15s,border-color .2s,opacity .3s}
+.pic:hover{transform:translateY(-3px);border-color:var(--warm)}
+.pic svg{width:100%;height:auto;display:block;border-radius:10px;background:#fff}
+.pic .cap{font-weight:700;font-size:15px;margin-top:8px}
+.pic .note{display:none;font-size:14px;margin-top:6px;font-weight:600}
+.pic.wrong{border-color:var(--cold);background:var(--ice);opacity:.85;cursor:default;transform:none}
+.pic.wrong .note{display:block;color:#1d4fa8}
+.pic.right{border-color:var(--good);background:var(--goodbg);transform:none;cursor:default}
+.pic.right .note{display:block;color:var(--good)}
+.pic.fade{opacity:.45;cursor:default;transform:none}
+.pic .mark{position:absolute;top:-12px;right:-10px;width:38px;height:38px;border-radius:50%;display:none;place-items:center;font-size:20px;color:#fff;font-weight:800;border:3px solid #fff}
+.pic.wrong .mark{display:grid;background:var(--cold)}
+.pic.right .mark{display:grid;background:var(--good)}
+
+/* help + notes */
+details.help,details.notes{margin-top:22px;border:2px solid var(--line);border-radius:16px;background:#fffcf7}
+details.notes{border-color:#bcd3ff;background:#f4f8ff}
+details summary{padding:12px 16px;font-weight:800;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"▸";margin-left:auto;transition:transform .2s}
+details[open] summary::after{transform:rotate(90deg)}
+.rules{margin:0;padding:0 18px 14px 40px}
+.rules li{margin:6px 0}
+.rules i.k{color:var(--c);font-style:normal;font-weight:800;background:color-mix(in srgb,var(--c) 12%,#fff);border-bottom:2px solid var(--c);padding:0 4px;border-radius:4px}
+.keynote{margin:0 18px 6px;font-size:14px;color:var(--muted);font-weight:700}
+.key{display:flex;flex-wrap:wrap;gap:6px;margin:0 18px 10px}
+.key span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border:2px solid var(--c)}
+.notes ul{margin:0;padding:0 18px 14px 38px}
+.notes li{margin:5px 0}
+.notes p{margin:0 18px 14px}
+
+.navrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:2px dashed var(--line)}
+
+/* home */
+.intro p{max-width:60ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:18px}
+.tcard{border:2px solid var(--line);background:#fffcf7;border-radius:16px;padding:14px;text-align:left;border-bottom-width:5px;transition:transform .12s}
+.tcard:hover{transform:translateY(-2px)}
+.tcard .num{font-family:Fredoka;font-weight:700;color:var(--hot)}
+.tcard .nm{font-weight:800;font-size:17px;margin:2px 0 6px}
+.tcard.done{border-color:var(--hot);background:#fff1ea}
+.tcard.skip{border-style:dashed;border-color:var(--cold)}
+.homeacts{display:flex;gap:12px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-weight:700;padding:4px}
+.review{margin:18px 0 0;padding-left:22px}
+.review li{margin:8px 0}
+
+/* fx */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.spark{position:absolute;left:0;top:0;font-size:24px;animation:fly 1s cubic-bezier(.2,.8,.3,1) forwards;will-change:transform}
+.spark.dotfx{width:12px;height:12px;border-radius:50%}
+@keyframes fly{from{transform:translate(var(--x),var(--y)) scale(.5);opacity:1}to{transform:translate(calc(var(--x) + var(--dx)),calc(var(--y) + var(--dy))) scale(1.15) rotate(var(--r));opacity:0}}
+.frost{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(58,134,255,.35) 100%);animation:frostfade 1.2s ease-out forwards}
+@keyframes frostfade{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+.flake{position:absolute;top:-40px;font-size:26px;animation:fall 1.4s linear forwards}
+@keyframes fall{to{transform:translateY(calc(100vh + 60px)) rotate(300deg);opacity:.2}}
+.shake{animation:shake .5s}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-10px)}30%{transform:translateX(9px)}45%{transform:translateX(-7px)}60%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.glow{animation:glow .9s ease-out}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(228,87,46,.7)}100%{box-shadow:0 0 0 22px rgba(228,87,46,0)}}
+.boil{animation:boil 1.4s ease-in-out infinite}
+@keyframes boil{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+@media (max-width:760px){
+  .side{display:none}
+  .hbar{display:block}
+  #dots{margin-left:0}
+  .card{padding:18px}
+  .wrap{padding-top:16px}
+  .tile{font-size:17px;padding:7px 11px}
+  .pics{gap:10px}
+  .pic{padding:7px}
+  .pic .cap{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="brand" id="homeBtn" aria-label="Go to all terms">🌡️ <span>Heat &amp; Temperature<small>Unscramble It!</small></span><span id="tbadge"></span></button>
+  <nav id="dots" aria-label="Terms"></nav>
+  <div class="hbar" aria-hidden="true"><span id="hbarFill"></span></div>
+</header>
+<div class="wrap">
+  <aside class="side" aria-label="Progress">
+    <div class="thermo">
+      <div class="tube"><div class="mercury" id="mercury"></div></div>
+      <div class="ticks"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="bulb"></div>
+    </div>
+    <div class="lbl" id="thermoLbl">0/10</div>
+    <div class="sub">terms<br>heated up</div>
+  </aside>
+  <main id="main" aria-live="polite"></main>
+</div>
+<div id="fx" aria-hidden="true"></div>
+
+<script>
+/* ---------- drawing helpers (pictures are built from these) ---------- */
+const INK='#3b332c',HOT='#e4572e',WARM='#f3a712',COLD='#3a86ff',WATER='#bde0fe',SKIN='#f6c7a1',METAL='#adb5bd',PCL='#2ec4b6';
+function rng(seed){let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+const f1=n=>(+n).toFixed(1);
+const svg=inner=>`<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">${inner}</svg>`;
+const circ=(x,y,r,f,sw=1.5)=>`<circle cx="${f1(x)}" cy="${f1(y)}" r="${r}" fill="${f}" stroke="${INK}" stroke-width="${sw}"/>`;
+const txt=(x,y,s,o={})=>`<text x="${x}" y="${y}" font-size="${o.size||11}" text-anchor="${o.anchor||'middle'}" fill="${o.fill||INK}" font-weight="${o.weight||800}" font-family="Nunito, Arial, sans-serif">${s}</text>`;
+const rect=(x,y,w,h,f,o={})=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rx??4}" fill="${f}" stroke="${o.stroke||INK}" stroke-width="${o.sw??1.5}"${o.dash?` stroke-dasharray="${o.dash}"`:''}/>`;
+const ln=(x1,y1,x2,y2,col=INK,w=2,extra='')=>`<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
+const path=(d,col=INK,w=2,fill='none',extra='')=>`<path d="${d}" stroke="${col}" stroke-width="${w}" fill="${fill}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+const head=(x,y,a,col,h=8)=>{const p=da=>`${f1(x-h*Math.cos(a+da))},${f1(y-h*Math.sin(a+da))}`;return `<polygon points="${f1(x)},${f1(y)} ${p(0.45)} ${p(-0.45)}" fill="${col}"/>`;};
+const arrow=(x1,y1,x2,y2,col=INK,w=3)=>{const a=Math.atan2(y2-y1,x2-x1);return ln(x1,y1,x2-5*Math.cos(a),y2-5*Math.sin(a),col,w)+head(x2,y2,a,col,9);};
+function motion(px,py,r,a,kind,col='#8a7f75'){
+  if(kind==='vib')return path(`M${f1(px-r-3)},${f1(py-3)} q-3,3 0,6 M${f1(px+r+3)},${f1(py-3)} q3,3 0,6`,col,1.4);
+  const L=kind==='fast'?11:5,bx=px-(r+2)*Math.cos(a),by=py-(r+2)*Math.sin(a),nx=-Math.sin(a)*3,ny=Math.cos(a)*3;let s='';
+  for(const k of[-1,1]){const sx=bx+nx*k,sy=by+ny*k;s+=ln(sx,sy,sx-L*Math.cos(a),sy-L*Math.sin(a),col,1.4);}return s;}
+function scatter(n,x,y,w,h,r,fill,seed,kind,gap=4){const R=rng(seed),pts=[];let tries=0;
+  while(pts.length<n&&tries<4000){tries++;const px=x+r+R()*(w-2*r),py=y+r+R()*(h-2*r);if(pts.every(p=>Math.hypot(p[0]-px,p[1]-py)>2*r+gap))pts.push([px,py,R()*Math.PI*2]);}
+  return pts.map(([px,py,a])=>(kind?motion(px,py,r,a,kind):'')+circ(px,py,r,fill)).join('');}
+function grid(cols,rows,x,y,step,r,fill,kind){let s='';for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const px=x+i*step,py=y+j*step;s+=(kind?motion(px,py,r,0,kind):'')+circ(px,py,r,fill);}return s;}
+const box=(x,y,w,h)=>rect(x,y,w,h,'#ffffff',{rx:8});
+function thermo(x,y,h,frac,col){const fh=(h-4)*frac;return rect(x-5,y,10,h+4,'#fff',{rx:5})+`<rect x="${x-2.5}" y="${f1(y+h+2-fh)}" width="5" height="${f1(fh+4)}" fill="${col}"/>`+circ(x,y+h+9,8,col)+[0.25,0.5,0.75].map(f=>ln(x+5,y+h*(1-f),x+9,y+h*(1-f),INK,1.2)).join('');}
+const flame=(x,y,s=1)=>`<g transform="translate(${x},${y}) scale(${s})"><path d="M0,-18 C9,-8 11,-1 8,5 C5,11 -5,11 -8,5 C-11,-1 -5,-7 0,-18Z" fill="#f3722c" stroke="${INK}" stroke-width="1.3"/><path d="M0,-6 C4,-1 4,4 0,7 C-4,4 -4,-1 0,-6Z" fill="#ffd166"/></g>`;
+const burner=(x,y,w)=>[0.25,0.5,0.75].map(f=>flame(x+w*f,y-2,0.75)).join('')+rect(x,y,w,8,'#495057',{rx:2});
+function pot(x,y,w,h){return rect(x-9,y+8,12,7,METAL,{rx:2})+rect(x+w-3,y+8,12,7,METAL,{rx:2})+rect(x,y,w,h,'#dee2e6',{rx:6})+`<rect x="${x+4}" y="${y+10}" width="${w-8}" height="${h-14}" rx="4" fill="${WATER}"/>`;}
+function sun(x,y,r){let s='';for(let i=0;i<8;i++){const a=i*Math.PI/4;s+=ln(x+(r+3)*Math.cos(a),y+(r+3)*Math.sin(a),x+(r+10)*Math.cos(a),y+(r+10)*Math.sin(a),WARM,3);}return s+circ(x,y,r,'#ffd166');}
+const earth=(x,y,r)=>circ(x,y,r,'#4ea8de')+path(`M${x-r*.55},${y-r*.25} q${r*.3},-${r*.45} ${r*.65},-${r*.1} q-${r*.05},${r*.45} -${r*.65},${r*.1}z`,INK,1,'#80b918')+path(`M${x},${y+r*.35} q${r*.4},-${r*.3} ${r*.55},${r*.1} q-${r*.3},${r*.35} -${r*.55},-${r*.1}z`,INK,1,'#80b918');
+function hand(x,y,dir=1){return `<g transform="translate(${x},${y}) scale(${dir},1)">${rect(26,-9,18,18,'#8ecae6',{rx:3})}${rect(0,-11,28,22,SKIN,{rx:8})}${[-10,-5,0,5].map(o=>rect(-14,o,18,5,SKIN,{rx:2.5,sw:1.2})).join('')}${rect(8,-20,7,13,SKIN,{rx:3.5,sw:1.2})}</g>`;}
+const handDown=(x,y)=>`<g transform="rotate(-90 ${x} ${y})">${hand(x,y)}</g>`;
+const steam=(x,y,col='#adb5bd')=>path(`M${x},${y} q-4,-5 0,-10 q4,-5 0,-10`,col,2.2);
+function mug(x,y,liquid='#7b4b2a',hot=true){return path(`M${x+14},${y-8} q11,0 11,8 q0,8 -11,8`,INK,3)+rect(x-14,y-16,28,32,'#ffffff',{rx:4})+`<rect x="${x-11}" y="${y-13}" width="22" height="6" rx="2" fill="${liquid}"/>`+(hot?steam(x-6,y-21)+steam(x+5,y-21):'');}
+const ice=(x,y,s=24)=>rect(x,y,s,s,'#d6efff',{stroke:'#4a90d9',rx:4})+ln(x+5,y+5,x+s*.5,y+5,'#ffffff',2.5);
+const snow=(x,y,s=7,col=COLD)=>[0,60,120].map(d=>{const a=d*Math.PI/180;return ln(x-s*Math.cos(a),y-s*Math.sin(a),x+s*Math.cos(a),y+s*Math.sin(a),col,2);}).join('');
+function wave(x1,y1,x2,y2,col=HOT,amp=4){const L=Math.hypot(x2-x1,y2-y1),a=Math.atan2(y2-y1,x2-x1),n=Math.max(1,Math.floor((L-8)/12));let d='M0,0';for(let i=0;i<n;i++)d+=` q3,${-amp} 6,0 q3,${amp} 6,0`;return `<g transform="translate(${x1},${y1}) rotate(${f1(a*180/Math.PI)})">${path(d,col,2.5)}${head(n*12+8,0,0,col,9)}</g>`;}
+const drop=(x,y,s=1)=>`<path transform="translate(${x},${y}) scale(${s})" d="M0,-7 C4,-2 5,1 5,3 A5,5 0 0 1 -5,3 C-5,1 -4,-2 0,-7Z" fill="#8ecae6" stroke="${INK}" stroke-width="1.2"/>`;
+function glass(x,y,w,h,fill,level=.35){const o=`M${x},${y} L${x+5},${y+h} L${x+w-5},${y+h} L${x+w},${y}`;return path(o+'Z','none',0,'#f1f8ff')+(fill?`<path d="M${x+w*.04+level*4},${y+h*level} L${x+5.5},${y+h-1.5} L${x+w-5.5},${y+h-1.5} L${x+w-w*.04-level*4},${y+h*level}Z" fill="${fill}"/>`:'')+path(o,INK,2.2);}
+const thermos=(x,y,col)=>rect(x-15,y-30,30,64,col,{rx:9})+rect(x-11,y-40,22,11,'#495057',{rx:3})+`<rect x="${x-15}" y="${y-4}" width="30" height="8" fill="#ffffff66"/>`;
+const blanket=(x,y,w,h,col='#ef476f')=>path(`M${x},${y} q${w/4},-7 ${w/2},0 q${w/4},7 ${w/2},0 L${x+w},${y+h} q-${w/4},7 -${w/2},0 q-${w/4},-7 -${w/2},0Z`,INK,1.6,col)+[0.33,0.66].map(f=>ln(x+5,y+h*f,x+w-5,y+h*f,'#ffffff',3,'stroke-dasharray="7 6"')).join('');
+const mitten=(x,y,col='#9d4edd')=>path(`M${x-14},${y+22} L${x-14},${y-8} q0,-18 14,-18 q14,0 14,18 L${x+14},${y+22}Z`,INK,1.8,col)+path(`M${x-14},${y+4} q-13,-3 -11,-15 q4,-7 11,-1`,INK,1.8,col)+rect(x-17,y+20,34,11,'#ffffff',{rx:3});
+const pan=(x,y,w,col='#6c757d')=>rect(x+w-2,y+3,42,6,'#343a40',{rx:3})+path(`M${x},${y} L${x+6},${y+16} L${x+w-6},${y+16} L${x+w},${y}Z`,INK,2,col);
+const heater=(x,y,w,h)=>rect(x,y,w,h,'#ced4da',{rx:3})+Array.from({length:Math.floor(w/10)-1},(_,i)=>ln(x+10+i*10,y+5,x+10+i*10,y+h-5,'#868e96',3)).join('');
+const label=(x,y,s,col=INK,size=11)=>txt(x,y,s,{fill:col,size});
+const space=()=>rect(0,0,200,140,'#1f1d36',{rx:10,sw:0})+[[15,15],[60,22],[110,12],[150,30],[185,14],[30,120],[90,128],[140,118],[178,100],[70,100]].map(([a,b])=>`<circle cx="${a}" cy="${b}" r="1.4" fill="#fff"/>`).join('');
+const stopSign=(x,y,r=14)=>{let p=[];for(let i=0;i<8;i++){const a=Math.PI/8+i*Math.PI/4;p.push(`${f1(x+r*Math.cos(a))},${f1(y+r*Math.sin(a))}`);}return `<polygon points="${p.join(' ')}" fill="#d62828" stroke="#fff" stroke-width="2"/>`+txt(x,y+3.5,'STOP',{fill:'#fff',size:8});};
+const drip=(x,y,r,col)=>path(`M${x-r*.6},${y+r*.6} Q${x-3},${y+r+16} ${x},${y+r+16} Q${x+3},${y+r+16} ${x+r*.6},${y+r*.6}`,INK,1.4,col)+circ(x,y,r,col)+`<ellipse cx="${x}" cy="${y+r*.7}" rx="${r*.55}" ry="${r*.35}" fill="${col}"/>`;
+</script>
+<script>
+const CFG={
+key:'unitC-unscramble-teacher-v1',
+teacher:true,
+heading:'Heat & Temperature: Unscramble It! (Demo)',
+intro:'Let’s practise the clues together with five words about changes of state. Then you’ll try ten new words on your own.',
+terms:[
+/* T1 ----------------------------------------------------------- */
+{term:'Change of state',
+ def:'A change of state happens when a substance gains or loses heat, so its particles move in a new way.',
+ alts:['A change of state happens when a substance loses or gains heat, so its particles move in a new way.'],
+ notes:['<b>Capital = first:</b> only “A” has a capital, so it starts the sentence.',
+  '<b>Articles point to nouns:</b> “A” needs a noun right after it, so “A change.” The term is the subject, then “happens.”',
+  '<b>Linking words:</b> “of” is followed by a noun: “of state.” “in” is followed by an article: “in a new way.”',
+  '<b>Comma before a joining word:</b> “heat,” has the comma, so “so” comes right after it.',
+  '<b>Period = last:</b> “way.” ends the sentence.',
+  '<b>Science check:</b> “gains or loses” and “loses or gains” both work, so both are accepted.'],
+ talk:'Ask: “Is steam a different substance from ice?” Push on the idea that the particles stay the same, only their speed and spacing change.',
+ pics:[
+  {ok:true,cap:'Adding heat changes ice into water, then into steam',why:'Yes! Same particles, just moving in a new way.',
+   art:()=>svg(ice(12,58,32)+arrow(50,74,72,74,HOT)+label(61,64,'+heat',HOT,9)+glass(78,50,40,46,WATER,.3)+arrow(124,74,146,74,HOT)+label(135,64,'+heat',HOT,9)+steam(160,96)+steam(172,92)+steam(184,96)+label(28,118,'solid')+label(98,118,'liquid')+label(172,118,'gas'))},
+  {ok:false,cap:'Boiling turns water into a brand-new substance',why:'Steam is still water. Only the speed and spacing of particles change.',
+   art:()=>svg(box(10,30,74,74)+grid(3,3,26,46,21,6,'#90e0ef')+arrow(90,67,110,67,HOT)+box(116,30,74,74)+[[132,48],[160,46],[176,72],[140,80],[166,92]].map(([x,y])=>`<rect x="${x-6}" y="${y-6}" width="12" height="12" fill="#c77dff" stroke="${INK}" stroke-width="1.5" transform="rotate(20 ${x} ${y})"/>`).join('')+label(47,124,'water')+label(153,124,'new stuff!',HOT))},
+  {ok:false,cap:'Particles get bigger when ice melts',why:'Particles stay the same size. They move faster and spread out.',
+   art:()=>svg(box(10,30,74,74)+grid(3,3,26,46,21,6,'#a0c4ff')+arrow(90,67,110,67,HOT)+box(116,30,74,74)+grid(2,2,136,50,34,14,'#90e0ef')+label(47,124,'ice')+label(153,124,'water'))},
+  {ok:false,cap:'Particles disappear when water boils',why:'The particles are still there, just spread far apart as a gas.',
+   art:()=>svg(box(10,30,74,74)+scatter(8,14,52,66,50,6,'#90e0ef',5,'slow',5)+arrow(90,67,110,67,HOT)+box(116,30,74,74)+txt(153,74,'poof!',{size:16,fill:'#8a7f75'})+label(47,124,'water')+label(153,124,'steam'))}
+ ]},
+/* T2 ----------------------------------------------------------- */
+{term:'Melting',
+ def:'Melting happens when a solid gains heat, so its particles move faster and slide past each other.',
+ notes:['<b>Term first:</b> “Melting” has the capital and is the subject, so “Melting happens…”',
+  '<b>Articles point to nouns:</b> “a” goes right before “solid.”',
+  '<b>Comma before a joining word:</b> “heat,” then “so.”',
+  'Point out the pattern: <i>___ happens when a ___ gains/loses heat, so its particles…</i> It repeats on every page of this demo.',
+  '<b>Science check:</b> does a solid <i>gain</i> or <i>lose</i> heat to melt?'],
+ talk:'The sugar picture is a great discussion. Ask: “Does sugar melt or dissolve in water? What’s the difference?”',
+ pics:[
+  {ok:true,cap:'Ice gains heat and its particles start sliding past each other',why:'Yes! Melting is a solid gaining heat and turning into a liquid.',
+   art:()=>svg(box(8,30,76,76)+grid(3,3,26,48,20,6,'#a0c4ff','vib')+arrow(90,68,110,68,HOT)+label(100,58,'+heat',HOT,9)+box(116,30,76,76)+scatter(9,120,62,68,42,6,'#90e0ef',8,'slow',5)+label(46,124,'solid')+label(154,124,'liquid'))},
+  {ok:false,cap:'Ice melts inside a freezer',why:'Ice melts when it gains heat. A freezer takes heat away.',
+   art:()=>svg(rect(45,10,110,120,'#e9f5ff',{rx:8})+ln(55,40,145,40,INK,1.5)+rect(140,52,6,24,METAL,{rx:2})+ice(80,70,34)+drop(90,116,1.2)+drop(106,120,1)+snow(70,25,6)+snow(130,25,6)+label(100,30,'freezer',COLD,10))},
+  {ok:false,cap:'The particles themselves melt into goo',why:'Particles don’t melt. They move faster and slide past each other.',
+   art:()=>svg(box(18,14,164,112)+[[50,40],[100,40],[150,40],[50,84],[100,84],[150,84]].map(([x,y])=>drip(x,y,12,'#a0c4ff')).join(''))},
+  {ok:false,cap:'Sugar melts when you stir it into water',why:'That’s dissolving. Melting needs heat to change a solid into a liquid.',
+   art:()=>svg(ln(110,108,150,20,'#868e96',5)+glass(55,40,90,92,WATER,.25)+rect(84,90,22,22,'#ffffff',{rx:3})+path('M70,70 q15,8 30,0 q15,-8 30,0','#ffffff',2.5)+label(100,22,'melting?',INK,12))}
+ ]},
+/* T3 ----------------------------------------------------------- */
+{term:'Freezing',
+ def:'Freezing happens when a liquid loses heat, so its particles slow down and lock into place.',
+ notes:['Same pattern as melting. Ask students to predict the sentence <i>before</i> tapping.',
+  '<b>Linking words:</b> “into” is followed by a noun: “into place.”',
+  '<b>Period = last:</b> “place.” ends it.',
+  '<b>Science check:</b> “lock into place and slow down” is grammatical, but particles slow down <i>first</i>, so it isn’t accepted.'],
+ talk:'Focus on the “cold is added” picture. Many students think cold flows in. Ask: “What is the freezer actually doing to the water?”',
+ pics:[
+  {ok:true,cap:'Water loses heat and its particles lock into place',why:'Yes! Freezing is a liquid losing heat and becoming a solid.',
+   art:()=>svg(box(8,30,76,76)+scatter(9,12,58,68,44,6,'#90e0ef',14,'slow',5)+arrow(90,68,110,68,COLD)+label(100,58,'−heat',COLD,9)+box(116,30,76,76)+grid(3,3,134,48,20,6,'#a0c4ff','vib')+label(46,124,'liquid')+label(154,124,'solid'))},
+  {ok:false,cap:'Freezing happens when cold is added to water',why:'Cold isn’t added. Freezing happens when a liquid loses heat.',
+   art:()=>svg(glass(60,52,80,80,WATER,.25)+snow(50,22,8)+snow(100,14,8)+snow(150,22,8)+arrow(58,32,78,62,COLD)+arrow(100,26,100,60,COLD)+arrow(142,32,122,62,COLD)+label(176,80,'cold',COLD,11))},
+  {ok:false,cap:'Particles in ice stop moving completely',why:'Particles in ice still vibrate in place. They never fully stop.',
+   art:()=>svg(box(18,14,164,112)+grid(5,3,38,46,26,7,'#a0c4ff')+stopSign(164,30,13))},
+  {ok:false,cap:'Water freezes in a pot on a hot stove',why:'A stove adds heat. Freezing needs heat to be removed.',
+   art:()=>svg(burner(46,116,108)+pot(40,40,120,72)+ice(70,66,28)+ice(104,72,24)+snow(170,28,8)+label(100,28,'freezing!',COLD,12))}
+ ]},
+/* T4 ----------------------------------------------------------- */
+{term:'Evaporation',
+ def:'Evaporation happens when a liquid gains heat, so its particles escape and become a gas.',
+ notes:['Have students explain which clue they used for each word placed.',
+  '<b>Articles point to nouns:</b> there are two “a” tiles. One goes before “liquid,” one before “gas.” The science check decides which!',
+  '<b>Science check:</b> “a gas gains heat… become a liquid” follows the grammar rules but is false.'],
+ talk:'Ask: “Where does a puddle go on a cool fall day?” This targets the idea that water must reach 100°C to evaporate.',
+ pics:[
+  {ok:true,cap:'Water particles gain energy and escape into the air',why:'Yes! The particles leave the puddle as water vapour.',
+   art:()=>svg(sun(32,30,14)+`<ellipse cx="110" cy="112" rx="72" ry="14" fill="${WATER}" stroke="${INK}" stroke-width="1.5"/>`+scatter(5,60,104,100,14,4,'#90e0ef',3,null,4)+[[80,70],[118,52],[150,78]].map(([x,y])=>circ(x,y,4,'#90e0ef')+arrow(x,y-7,x,y-24,'#5aa9e6',2)).join(''))},
+  {ok:false,cap:'The water is destroyed and gone forever',why:'The water isn’t gone. Its particles are now water vapour in the air.',
+   art:()=>svg(`<ellipse cx="100" cy="112" rx="72" ry="14" fill="${WATER}" stroke="${INK}" stroke-width="1.5"/>`+[[70,70],[110,56],[146,74]].map(([x,y])=>ln(x-8,y-8,x+8,y+8,HOT,3)+ln(x+8,y-8,x-8,y+8,HOT,3)).join('')+label(100,30,'gone forever!',HOT,13))},
+  {ok:false,cap:'A puddle only dries by soaking into the ground',why:'Some water soaks in, but much of it evaporates into the air.',
+   art:()=>svg(sun(32,30,14)+rect(0,92,200,48,'#b08968',{rx:10,sw:0})+`<ellipse cx="100" cy="92" rx="70" ry="10" fill="${WATER}" stroke="${INK}" stroke-width="1.5"/>`+arrow(70,98,70,128,'#5aa9e6')+arrow(100,100,100,132,'#5aa9e6')+arrow(130,98,130,128,'#5aa9e6')+label(150,40,'only down',INK,11))},
+  {ok:false,cap:'Water can only evaporate at 100°C',why:'Evaporation happens at any temperature. That’s why puddles dry on cool days.',
+   art:()=>svg(burner(36,116,98)+pot(30,40,110,72)+[[60,80],[85,70],[110,88],[95,96],[70,96]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#ffffff" stroke="#5aa9e6" stroke-width="1.5"/>`).join('')+thermo(170,22,74,1,HOT)+label(170,128,'100°C only',HOT,10))}
+ ]},
+/* T5 ----------------------------------------------------------- */
+{term:'Condensation',
+ def:'Condensation happens when a gas loses heat, so its particles slow down and form a liquid.',
+ notes:['Students should be able to do this one with you only guiding. Let them call out the order.',
+  '<b>Science check:</b> compare it with evaporation. Which words flip? (gains ↔ loses, liquid ↔ gas)'],
+ talk:'Use the “leaking glass” picture. Ask: “If water leaked through glass, why doesn’t a glass of warm water get wet on the outside?”',
+ pics:[
+  {ok:true,cap:'Water vapour in the air cools and forms drops on a cold glass',why:'Yes! The vapour loses heat on the cold glass and becomes liquid.',
+   art:()=>svg(glass(66,30,68,100,WATER,.2)+ice(80,56,18)+ice(102,66,16)+drop(64,72)+drop(138,60)+drop(68,104)+drop(134,98)+[[24,50],[30,96],[176,40],[170,90]].map(([x,y])=>circ(x,y,4,'#cfe8ff')+arrow(x+(x<100?8:-8),y,x+(x<100?26:-26),y,'#5aa9e6',2)).join(''))},
+  {ok:false,cap:'Water leaks through the glass from inside',why:'Glass doesn’t leak. The drops come from water vapour in the air.',
+   art:()=>svg(glass(66,30,68,100,WATER,.2)+arrow(88,90,58,90,'#5aa9e6',2.5)+arrow(112,80,142,80,'#5aa9e6',2.5)+drop(52,92)+drop(148,82)+label(100,22,'leaking!',INK,11))},
+  {ok:false,cap:'The cold itself turns into water drops',why:'Cold isn’t a substance. Water vapour loses heat and becomes liquid.',
+   art:()=>svg(glass(66,30,68,100,WATER,.2)+snow(28,50,8)+arrow(40,54,58,66,COLD,2)+drop(62,72)+snow(172,50,8)+arrow(160,54,142,66,COLD,2)+drop(138,72))},
+  {ok:false,cap:'Water vapour rising off a hot pan',why:'That’s evaporation. Condensation is a gas losing heat and becoming a liquid.',
+   art:()=>svg(burner(46,104,84)+pan(40,80,96,'#6c757d')+steam(70,72)+steam(88,72)+steam(106,72)+[[70,34],[96,26],[112,40]].map(([x,y])=>circ(x,y,4,'#cfe8ff')).join(''))}
+ ]}
+]};
+
+</script>
+<script>
+/* ---------- game engine ---------- */
+const N=CFG.terms.length, $=s=>document.querySelector(s), main=$('#main');
+const K=(type,txt)=>`<i class="k" style="--c:${POS[type].c}">${txt}</i>`;
+const RULES_HTML=()=>`<details class="help" id="helpPanel"><summary>🧩 Word-order clues (tap to open)</summary>
+<p class="keynote">Each type of word has its own colour, and the word tiles use the same colours:</p>
+<div class="key">${Object.values(POS).map(p=>`<span style="--c:${p.c}">${p.full||p.name}</span>`).join('')}</div><ol class="rules">
+<li><b>Capital = first.</b> The word with a capital letter starts the sentence.</li>
+<li><b>Period = last.</b> The word with a period ( . ) ends the sentence.</li>
+<li><b>${K('article','Articles')} point to ${K('noun','nouns')}.</b> ${K('article','a')}, ${K('article','an')} and ${K('article','the')} come right before a ${K('noun','noun')}, or before an ${K('adjective','adjective')} and then a ${K('noun','noun')} (${K('article','the')} ${K('adjective','average')} ${K('noun','speed')}).</li>
+<li><b>Comma before ${K('conjunction','so')}.</b> When ${K('conjunction','so')} joins two complete ideas, a comma comes right before it. The comma is stuck to the word it follows. There is <b>no</b> comma before ${K('conjunction','and')}.</li>
+<li><b>${K('term','Term')} first.</b> The ${K('term','term')} is usually the subject, followed by a ${K('verb','verb')} like ${K('verb','is')} or ${K('verb','happens')}.</li>
+<li><b>Is or are?</b> ${K('verb','is')} goes with one thing; ${K('verb','are')} goes with more than one.</li>
+<li><b>“That” describes.</b> ${K('pronoun','that')} describes the ${K('noun','noun')} right before it (a ${K('noun','material')} ${K('pronoun','that')}…).</li>
+<li><b>Small ${K('preposition','linking words')}.</b> ${K('preposition','of')}, ${K('preposition','from')}, ${K('preposition','to')}, ${K('preposition','by')}, ${K('preposition','in')}, ${K('preposition','into')} and ${K('preposition','through')} are followed by an ${K('article','article')} or a ${K('noun','noun')}.</li>
+<li><b>${K('adverb','Adverbs')} tell how.</b> ${K('adverb','always')}, ${K('adverb','easily')} and ${K('adverb','faster')} usually come right after the ${K('verb','verb')} they describe (${K('verb','move')} ${K('adverb','faster')}).</li>
+<li><b>Science check!</b> Read it out loud. Make sure the sentence is <b>true</b>, not just a sentence.</li></ol></details>`;
+
+/* parts of speech for hints */
+const POS={
+ term:{g:1,c:'#2f2a26',name:'term',short:'what you are defining',rule:'Usually starts the definition.',tip:'the word this page is about. It usually comes first.'},
+ article:{g:1,c:'#8e44ad',name:'article',short:'a, an, the',rule:'Followed by a noun or an adjective.',tip:'a, an, the: points to a noun'},
+ noun:{g:1,c:'#2a6fdb',name:'noun',short:'person, place, thing or idea',rule:'Often comes after an article or adjective.',tip:'a person, place, thing or idea'},
+ verb:{g:2,c:'#d35400',name:'verb',short:'action or being word',rule:'Often comes right after the term.',tip:'an action or a being word (is, are, happens)'},
+ adjective:{g:2,c:'#00897b',name:'adj',full:'adjective',short:'describes a noun',rule:'Usually comes right before a noun.',tip:'describes a noun, and comes before it'},
+ adverb:{g:2,c:'#6d4c41',name:'adverb',short:'describes a verb',rule:'Usually comes right after the verb.',tip:'describes how or when a verb happens'},
+ conjunction:{g:3,c:'#c2185b',name:'conj',full:'conjunction',short:'joining word',rule:'A comma comes before “so”, but not before “and”.',tip:'joining word (and, so, or, when)'},
+ preposition:{g:3,c:'#455a64',name:'prep',full:'preposition',short:'linking word',rule:'Followed by an article or a noun.',tip:'linking word, followed by an article or noun'},
+ pronoun:{g:3,c:'#b8860b',name:'pronoun',short:'stands in for a noun',rule:'“that” describes the noun right before it.',tip:'stands in for a noun (it, its, that)'}};
+const LEX={a:'article',an:'article',the:'article',
+ all:'adjective',average:'adjective',bigger:'adjective',cool:'adjective',cooler:'adjective',empty:'adjective',new:'adjective',thermal:'adjective',tiny:'adjective',total:'adjective',warm:'adjective',warmer:'adjective',moving:'adjective',
+ always:'adverb',apart:'adverb',down:'adverb',easily:'adverb',faster:'adverb',
+ and:'conjunction',or:'conjunction',so:'conjunction',when:'conjunction',
+ by:'preposition',from:'preposition',in:'preposition',into:'preposition',of:'preposition',past:'preposition',through:'preposition',to:'preposition',
+ it:'pronoun',its:'pronoun',that:'pronoun',each:'pronoun',other:'pronoun',
+ are:'verb',become:'verb',bump:'verb',can:'verb',escape:'verb',form:'verb',gains:'verb',gets:'verb',happens:'verb',is:'verb',keeps:'verb',lets:'verb',lock:'verb',loses:'verb',made:'verb',move:'verb',passes:'verb',rises:'verb',sinks:'verb',slide:'verb',slow:'verb',slows:'verb',spread:'verb',travel:'verb'};
+const termIdx=CFG.terms.map(t=>{const d=t.def.toLowerCase().replace(/[.,]/g,'').split(' '),tw=t.term.toLowerCase().split(' ');let s=['a','an','the'].includes(d[0])?1:0;
+  return tw.every((w,j)=>d[s+j]===w)?new Set(tw.map((_,j)=>s+j)):new Set();});
+function posOf(i,w,idx){const k=w.toLowerCase().replace(/[.,]/g,'');if(idx!=null&&termIdx[i].has(idx))return 'term';const o=CFG.terms[i].pos;return (o&&o[k])||LEX[k]||'noun';}
+function tileHTML(i,w,extraCls='',attrs='',idx=null){const p=POS[posOf(i,w,idx)];const on=false;
+  return `<button class="tile tagged${extraCls}" style="--c:${p.c}" ${attrs}>${esc(w)}${on?`<span class="pos">${p.name}</span>`:''}</button>`;}
+function colorKeyHTML(){return `<div class="colorkey" aria-label="Colour key"><div class="ck-title">🎨 Colour key</div><div class="ck-items">${Object.values(POS).map(p=>`<span class="ck" style="--c:${p.c}"><b>${p.full||p.name}</b><small>${p.short}</small><em>${p.rule}</em></span>`).join('')}</div></div>`;}
+function legendHTML(i){const lvl=S.p[i].hints||0;return Object.values(POS).filter(p=>lvl>=p.g).map(p=>`<span style="--c:${p.c}"><b>${p.full||p.name}</b> ${p.tip}</span>`).join('');}
+
+function blank(){return CFG.terms.map(()=>({def:false,pic:false,skip:false,wrong:[],ans:'',reveals:0}));}
+let S=(()=>{try{const v=JSON.parse(localStorage.getItem(CFG.key));if(v&&Array.isArray(v.p)&&v.p.length===N)return v;}catch(e){}return{p:blank()};})();
+function save(){try{localStorage.setItem(CFG.key,JSON.stringify(S));}catch(e){}}
+const live=CFG.terms.map(()=>({tiles:null,placed:[],picOrder:null,marks:null}));
+let cur=-1;
+const done=i=>S.p[i].def&&S.p[i].pic;
+const doneCount=()=>S.p.filter((p,i)=>done(i)).length;
+const accepted=i=>[CFG.terms[i].def,...(CFG.terms[i].alts||[])];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+function initTiles(i){const L=live[i];if(L.tiles)return;const w=CFG.terms[i].def.split(' ');let o;let guard=0;
+  do{o=shuffle(w.map((_,k)=>k));guard++;}while(guard<50&&o.every((k,j)=>w[k]===w[j]));L.tiles=o.map(k=>w[k]);L.orig=o;L.placed=[];}
+function initPics(i){const L=live[i];if(!L.picOrder)L.picOrder=shuffle(CFG.terms[i].pics.map((_,k)=>k));}
+
+/* header + thermometer */
+function chrome(){
+  $('#tbadge').innerHTML=CFG.teacher?'<span class="badge-teacher">TEACHER DEMO</span>':'';
+  $('#dots').innerHTML=CFG.terms.map((t,i)=>{const p=S.p[i];const c=['dot',done(i)?'done':p.def?'half':'',p.skip&&!done(i)?'skip':'',i===cur?'cur':''].join(' ');
+    return `<button class="${c}" data-go="${i}" title="${esc(t.term)}${done(i)?' (done)':p.skip?' (skipped)':''}" aria-label="Term ${i+1}: ${esc(t.term)}">${done(i)?'✓':i+1}</button>`;}).join('');
+  const pct=doneCount()/N;
+  $('#mercury').style.height=(6+pct*94)+'%';
+  $('#hbarFill').style.width=(pct*100)+'%';
+  $('#thermoLbl').textContent=`${doneCount()}/${N}`;
+}
+
+/* screens */
+function home(){cur=-1;chrome();
+  const next=firstOpen();
+  main.innerHTML=`<section class="card intro">
+    <div class="eyebrow">Unit C · ${CFG.teacher?'Let’s practise together':'Intro activity'}</div>
+    <h1 style="font-size:clamp(30px,5vw,44px);margin:6px 0 10px">${esc(CFG.heading)}</h1>
+    <p>${CFG.intro}</p>
+    <p><b>Step 1:</b> Tap the scrambled words in the right order to build the definition.<br><b>Step 2:</b> Pick the picture that shows the idea best. Three pictures show common mix-ups!</p>
+    <p>Stuck? Skip a term and come back to it later. Each term you finish heats up the thermometer. 🌡️</p>
+    ${RULES_HTML()}
+    <div class="grid">${CFG.terms.map((t,i)=>{const p=S.p[i];const st=done(i)?'🔥 Done':p.def?'Step 2 to go':p.skip?'↷ Skipped':'Not started';
+      return `<button class="tcard ${done(i)?'done':p.skip?'skip':''}" data-go="${i}"><div class="num">Term ${i+1}</div><div class="nm">${esc(t.term)}</div><div class="pill ${done(i)?'done':''}">${st}</div></button>`;}).join('')}</div>
+    <div class="homeacts">
+      ${next>=0?`<button class="btn primary" data-go="${next}">${doneCount()||S.p.some(p=>p.def||p.skip)?'Keep going':'Start'} →</button>`:`<button class="btn primary" data-act="finale">See your results 🔥</button>`}
+      <button class="link" data-act="resetAll">${CFG.teacher?'Reset demo':'Start over'}</button>
+    </div></section>`;
+  window.scrollTo({top:0});
+}
+function firstOpen(from=-1){for(let k=1;k<=N;k++){const j=(from+k+N)%N;if(!done(j))return j;}return -1;}
+
+function term(i){cur=i;initTiles(i);initPics(i);chrome();const t=CFG.terms[i],p=S.p[i];
+  main.innerHTML=`<section class="card" id="termCard">
+    <div class="term-head"><div><div class="eyebrow">Term ${i+1} of ${N}</div><h2>${esc(t.term)}</h2></div>
+      <span class="pill ${done(i)?'done':''}">${done(i)?'🔥 Complete':p.def?'Step 2 to go':p.skip?'↷ Skipped earlier':'In progress'}</span></div>
+    ${colorKeyHTML()}
+    <div class="step"><h3><span class="n">1</span> Unscramble the definition</h3>
+      <div class="answer" id="answer"></div>
+      <div class="pool" id="pool" aria-label="Word tiles"></div>
+      <div class="actions" id="acts1"></div>
+      <div class="msg" id="msg1" role="status"></div>
+    </div>
+    <div class="step" id="step2"><h3><span class="n">2</span> Which picture shows <span style="color:var(--hot)">${esc(t.term.toLowerCase())}</span> best?</h3>
+      <div id="picsWrap"></div><div class="msg" id="msg2" role="status"></div></div>
+    ${RULES_HTML()}
+    ${CFG.teacher&&t.notes?`<details class="notes"><summary>🍎 Teaching notes</summary><ul>${t.notes.map(n=>`<li>${n}</li>`).join('')}</ul>${t.talk?`<p><b>Picture talk:</b> ${t.talk}</p>`:''}</details>`:''}
+    <div class="navrow">
+      <button class="btn quiet" data-act="prev">← Previous</button>
+      <span class="spacer"></span>
+      ${!done(i)?`<button class="btn cool" data-act="skip">Skip for now ↷</button>`:''}
+      <button class="btn ${done(i)?'primary':''}" data-act="next" id="nextBtn">Next →</button>
+    </div></section>`;
+  drawTiles();drawPics();window.scrollTo({top:0});
+}
+
+function drawTiles(){const i=cur,L=live[i],p=S.p[i],A=$('#answer'),P=$('#pool'),acts=$('#acts1');
+  if(p.def){A.className='answer solved';A.innerHTML=(p.ans||CFG.terms[i].def).split(' ').map((w,j)=>tileHTML(i,w,'','tabindex="-1" aria-disabled="true"',j)).join('');P.innerHTML='';
+    acts.innerHTML=CFG.teacher?`<button class="btn teach" data-act="resetTerm">↺ Reset this term</button>`:'';return;}
+  A.className='answer';
+  A.innerHTML=L.placed.length?L.placed.map((k,j)=>tileHTML(i,L.tiles[k],L.marks?(L.marks[j]?' ok':' no'):'',`data-back="${j}" aria-label="Remove ${esc(L.tiles[k])}"`,L.orig[k])).join(''):`<span class="ph">Tap the words below in order. Drag words in here to reorder them.</span>`;
+  P.innerHTML=L.tiles.map((w,k)=>L.placed.includes(k)?'':tileHTML(i,w,'',`data-tile="${k}"`,L.orig[k])).join('');
+  const left=3-(p.reveals||0);
+  acts.innerHTML=`<button class="btn quiet" data-act="clear">Clear</button>
+    <button class="btn hint" data-act="reveal" ${left?'':'disabled'}>➡️ ${left?`Reveal next word (${left} left)`:'No reveals left'}</button>
+    ${CFG.teacher?`<button class="btn teach" data-act="showAns">Show answer</button>`:''}
+    <span class="spacer"></span><button class="btn primary" data-act="check">Check ✓</button>`;
+}
+function drawPics(){const i=cur,t=CFG.terms[i],p=S.p[i],W=$('#picsWrap');
+  if(!p.def){W.innerHTML=`<div class="locked">🔒 Unscramble the definition to unlock the pictures.</div>`;return;}
+  W.innerHTML=`<div class="pics">${live[i].picOrder.map(k=>{const pc=t.pics[k],wr=p.wrong.includes(k),rt=p.pic&&pc.ok;
+    const cls=rt?'right':wr?'wrong':p.pic?'fade':'';
+    return `<button class="pic ${cls}" data-pic="${k}" ${wr||p.pic?'aria-disabled="true"':''}><span class="mark">${rt?'✓':'✗'}</span>${pc.art()}<div class="cap">${pc.cap}</div><div class="note">${pc.why}</div></button>`;}).join('')}</div>`;
+}
+
+function finale(){cur=-1;chrome();
+  main.innerHTML=`<section class="card" style="text-align:center">
+    <div style="font-size:64px" class="boil">🌡️🔥</div>
+    <h1 style="font-size:clamp(30px,5vw,46px);margin:8px 0">You hit the boiling point!</h1>
+    <p>All ${N} terms are unscrambled and matched. Here are the definitions you built:</p>
+    <ol class="review" style="text-align:left;max-width:720px;margin:18px auto 0">${CFG.terms.map((t,i)=>`<li><b>${esc(t.term)}:</b> ${esc(S.p[i].ans||t.def)}</li>`).join('')}</ol>
+    <div class="homeacts" style="justify-content:center"><button class="btn primary" data-act="home">Back to all terms</button></div></section>`;
+  window.scrollTo({top:0});
+  setTimeout(()=>{burst(innerWidth/2,innerHeight/3,46);burst(innerWidth*.2,innerHeight*.5,20);burst(innerWidth*.8,innerHeight*.5,20);},150);
+}
+
+/* actions */
+function msg(n,html,kind){const m=$('#msg'+n);if(m){m.className='msg '+(kind||'');m.innerHTML=html;}}
+function bestPrefix(i,words){let best={n:-1,ans:null};for(const a of accepted(i)){const aw=a.split(' ');let n=0;while(n<words.length&&n<aw.length&&words[n]===aw[n])n++;if(n>best.n)best={n,ans:aw};}return best;}
+function bestMatch(i,words){let best={n:-1,marks:[]};for(const a of accepted(i)){const aw=a.split(' ');const m=words.map((w,j)=>w===aw[j]);const n=m.filter(Boolean).length;if(n>best.n)best={n,marks:m};}return best;}
+function check(){const i=cur,L=live[i],left=L.tiles.length-L.placed.length;
+  if(left>0){msg(1,`Use every word first. ${left} word${left>1?'s':''} still in the pool.`,'info');shake($('#pool'));return;}
+  const words=L.placed.map(k=>L.tiles[k]),s=words.join(' ');
+  if(accepted(i).includes(s)){S.p[i].def=true;S.p[i].skip=false;S.p[i].ans=s;save();
+    drawTiles();drawPics();chrome();const A=$('#answer');A.classList.add('glow');fromEl(A,26);
+    msg(1,'🔥 Sizzling! You built the definition. Now pick the best picture.','good');
+    setTimeout(()=>$('#step2').scrollIntoView({behavior:'smooth',block:'start'}),650);
+  }else{const b=bestMatch(i,words);L.marks=b.marks;drawTiles();freeze($('#answer'));
+    msg(1,`❄️ Cooling off… ${b.n} of ${words.length} words are in the right spot. ✓ = right spot, ✗ = move it.${b.marks[0]?'':' Hint: which word has a capital letter?'}`,'bad');}
+}
+function reveal(all){const i=cur,L=live[i];const words=L.placed.map(k=>L.tiles[k]);const b=bestPrefix(i,words);
+  if(!all&&b.n>=b.ans.length){msg(1,'Every word is already in the right spot. Press Check!','info');return false;}
+  L.marks=null;const removed=L.placed.length-b.n;L.placed=L.placed.slice(0,b.n);const target=all?b.ans.length:Math.min(b.n+1,b.ans.length);
+  for(let j=L.placed.length;j<target;j++){const k=L.tiles.findIndex((w,idx)=>w===b.ans[j]&&!L.placed.includes(idx));if(k>=0)L.placed.push(k);}
+  msg(1,all?'Answer shown. Talk through which clue places each word, then press Check.':`➡️ Next word: <b>${esc(b.ans[L.placed.length-1]||'')}</b>.${removed?` ${removed} word${removed>1?'s':''} after it went back to the word bank.`:''} Reveals left: ${3-(S.p[i].reveals||0)}.`,'info');drawTiles();return true;}
+function pick(k){const i=cur,t=CFG.terms[i],p=S.p[i];if(p.pic||p.wrong.includes(k))return;const card=document.querySelector(`[data-pic="${k}"]`);
+  if(t.pics[k].ok){p.pic=true;p.skip=false;save();drawPics();chrome();const c=document.querySelector(`[data-pic="${k}"]`);c.classList.add('glow');fromEl(c,36);
+    const all=doneCount()===N;
+    msg(2,`🔥 Red hot! That picture shows ${esc(t.term.toLowerCase())}. ${all?'<button class="btn primary" data-act="finale" style="margin-left:8px">See your results 🔥</button>':`<button class="btn primary" data-act="next" style="margin-left:8px">Next term →</button>`}`,'good');
+    const nb=$('#nextBtn');if(nb)nb.classList.add('primary');const sk=document.querySelector('[data-act="skip"]');if(sk)sk.remove();
+  }else{p.wrong.push(k);save();freeze(card);setTimeout(drawPics,450);msg(2,'❄️ Brrr, that one shows a mix-up. Read why, then try another picture.','bad');}
+}
+function go(i){if(i<0)return home();term(i);}
+function skip(){const i=cur;if(!done(i)){S.p[i].skip=true;save();}const n=firstOpen(i);if(n<0||n===i){home();}else term(n);}
+
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='homeBtn')return home();
+  if(b.dataset.go!==undefined)return go(+b.dataset.go);
+  if(b.dataset.tile!==undefined){if(justDragged){justDragged=false;return;}const L=live[cur];L.marks=null;L.placed.push(+b.dataset.tile);drawTiles();const last=$('#answer').lastElementChild;if(last)last.classList.add('pop');msg(1,'');return;}
+  if(b.dataset.back!==undefined){if(justDragged){justDragged=false;return;}live[cur].marks=null;live[cur].placed.splice(+b.dataset.back,1);drawTiles();msg(1,'');return;}
+  if(b.dataset.pic!==undefined)return pick(+b.dataset.pic);
+  const a=b.dataset.act;if(!a)return;
+  if(a==='check')check();
+  else if(a==='clear'){live[cur].placed=[];live[cur].marks=null;drawTiles();msg(1,'');}
+  else if(a==='reveal'){const p=S.p[cur];if((p.reveals||0)<3){p.reveals=(p.reveals||0)+1;if(reveal(false))save();else p.reveals--;}}
+  else if(a==='showAns')reveal(true);
+  else if(a==='resetTerm'){S.p[cur]={def:false,pic:false,skip:false,wrong:[],ans:'',reveals:0};live[cur]={tiles:null,placed:[],picOrder:null};save();term(cur);}
+  else if(a==='prev')term((cur-1+N)%N);
+  else if(a==='next')term((cur+1)%N);
+  else if(a==='skip')skip();
+  else if(a==='home')home();
+  else if(a==='finale')finale();
+  else if(a==='resetAll'){if(confirm(CFG.teacher?'Reset the whole demo?':'Start over? This clears your progress.')){S={p:blank()};CFG.terms.forEach((_,i)=>live[i]={tiles:null,placed:[],picOrder:null});save();home();}}
+});
+
+/* drag tiles: word bank -> definition box, reorder inside the box, or drag back to the bank */
+let drag=null,justDragged=false;
+const inside=(el,x,y,pad=0)=>{const r=el.getBoundingClientRect();return x>=r.left-pad&&x<=r.right+pad&&y>=r.top-pad&&y<=r.bottom+pad;};
+document.addEventListener('pointerdown',e=>{if(e.button>0)return;
+  const el=e.target.closest('#answer .tile[data-back], #pool .tile[data-tile]');if(!el)return;
+  const r=el.getBoundingClientRect();
+  drag={el,fromPool:el.hasAttribute('data-tile'),x0:e.clientX,y0:e.clientY,ox:e.clientX-r.left,oy:e.clientY-r.top,active:false,ghost:null,slot:null};});
+function placeSlot(slot,x,y){const A=$('#answer');let best=null,bd=1e9;
+  if(slot.parentNode===A&&slot.style.display!=='none'&&inside(slot,x,y))return;
+  const tiles=[...A.querySelectorAll('.tile')].filter(t=>t!==slot);
+  const rowOf=t=>{const r=t.getBoundingClientRect();return y>=r.top-8&&y<=r.bottom+8;};
+  const same=tiles.filter(rowOf),pool=same.length?same:tiles;
+  for(const t of pool){const r=t.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const d=same.length?Math.abs(x-cx):Math.hypot(x-cx,(y-cy)*3);if(d<bd){bd=d;best={t,after:x>cx};}}
+  const ph=A.querySelector('.ph');if(ph)ph.remove();
+  if(!best){if(slot.parentNode!==A)A.appendChild(slot);return;}
+  const ref=best.after?best.t.nextSibling:best.t;if(ref!==slot)A.insertBefore(slot,ref);}
+document.addEventListener('pointermove',e=>{if(!drag)return;
+  if(!drag.active){if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<7)return;drag.active=true;
+    const g=drag.el.cloneNode(true);g.classList.remove('ok','no','pop');g.classList.add('ghost');g.removeAttribute('data-back');g.removeAttribute('data-tile');document.body.appendChild(g);drag.ghost=g;
+    if(drag.fromPool){const s=drag.el.cloneNode(true);s.classList.add('dragging','slot');s.removeAttribute('data-tile');drag.slot=s;}else drag.slot=drag.el;
+    drag.el.classList.add('dragging');document.body.classList.add('dragging-now');}
+  e.preventDefault();drag.ghost.style.left=(e.clientX-drag.ox)+'px';drag.ghost.style.top=(e.clientY-drag.oy)+'px';
+  const A=$('#answer'),overA=inside(A,e.clientX,e.clientY,24);
+  if(overA){placeSlot(drag.slot,e.clientX,e.clientY);drag.slot.style.display='';}
+  else if(drag.fromPool){if(drag.slot.parentNode)drag.slot.remove();}
+  else drag.slot.style.display=inside($('#pool'),e.clientX,e.clientY,24)?'none':'';
+},{passive:false});
+function endDrag(e){if(!drag)return;const d=drag;drag=null;if(!d.active)return;
+  d.ghost.remove();document.body.classList.remove('dragging-now');justDragged=true;setTimeout(()=>justDragged=false,50);
+  const L=live[cur],A=$('#answer'),before=L.placed.slice();
+  if(!d.fromPool&&d.slot.style.display==='none'){d.slot.remove();}
+  const order=[...A.querySelectorAll('.tile')].filter(t=>t.hasAttribute('data-back')||t===d.slot&&d.fromPool).map(t=>t===d.slot&&d.fromPool?+d.el.dataset.tile:L.placed[+t.dataset.back]);
+  L.placed=order;const changed=order.length!==before.length||order.some((k,j)=>k!==before[j]);
+  if(changed){L.marks=null;msg(1,'');}drawTiles();
+  if(d.fromPool&&changed){const nt=A.querySelectorAll('.tile')[order.indexOf(+d.el.dataset.tile)];if(nt)nt.classList.add('pop');}}
+document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+
+/* effects */
+const fx=$('#fx');
+function burst(x,y,n=24){const em=['🔥','✨','⭐','🌡️'],cols=['#e4572e','#f3a712','#ffd166','#f3722c'];
+  for(let k=0;k<n;k++){const s=document.createElement('span');const isDot=k%2;s.className='spark'+(isDot?' dotfx':'');
+    if(isDot)s.style.background=cols[k%cols.length];else s.textContent=em[k%em.length];
+    const a=Math.random()*Math.PI*2,d=80+Math.random()*170;
+    s.style.setProperty('--x',x+'px');s.style.setProperty('--y',y+'px');s.style.setProperty('--dx',Math.cos(a)*d+'px');s.style.setProperty('--dy',(Math.sin(a)*d-60)+'px');s.style.setProperty('--r',(Math.random()*360-180)+'deg');
+    s.style.animationDelay=(Math.random()*.12)+'s';fx.appendChild(s);setTimeout(()=>s.remove(),1300);}}
+function fromEl(el,n){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,n);}
+function shake(el){if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+function freeze(el){shake(el);const f=document.createElement('div');f.className='frost';fx.appendChild(f);setTimeout(()=>f.remove(),1300);
+  for(let k=0;k<10;k++){const s=document.createElement('span');s.className='flake';s.textContent='❄️';s.style.left=(Math.random()*100)+'vw';s.style.animationDelay=(Math.random()*.4)+'s';s.style.fontSize=(18+Math.random()*18)+'px';fx.appendChild(s);setTimeout(()=>s.remove(),2000);}}
+
+home();
+</script>
+</body>
+</html>
